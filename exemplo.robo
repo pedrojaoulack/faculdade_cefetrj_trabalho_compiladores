@@ -1,0 +1,33 @@
+// exemplo.robo - Programa de exemplo em RoboLang
+// Desenvolvido por: Pedro Henrique e Flávio Silva
+
+// Inicializa variáveis
+contador = 0;
+passos = 4;
+
+// Robô coleta itens
+pick "chave";
+pick "mapa";
+
+// Move em um quadrado
+repeat passos times {
+    move up;
+    turn right;
+    move right;
+    contador = contador + 1;
+}
+
+// Verifica posição
+x_pos = 4;
+if (contador == passos) {
+    move down;
+    drop;
+}
+
+// Move para origem
+repeat 2 times {
+    move left;
+    move down;
+}
+
+drop;
