@@ -6,8 +6,8 @@ def print_banner():
     print("=" * 60)
     print("🤖 RoboLang Interpreter v1.0")
     print("=" * 60)
-    print("Linguagem de programação para controle de robô virtual")
-    print("Desenvolvido por: Pedro Henrique e Flávio Silva")
+    print("Linguagem de programação para controle de Robô virtual")
+    print("Desenvolvido por Pedro Henrique e Flávio Silva")
     print("=" * 60)
     print()
 
@@ -62,7 +62,7 @@ def run_interactive():
             line = input("robo> ")
             
             if line.strip().lower() == 'sair':
-                print("👋 Encerrando...")
+                print("👋 Até mais. Encerrando...")
                 break
             elif line.strip().lower() == 'help':
                 print_help()
@@ -78,7 +78,7 @@ def run_interactive():
                 
             parse(line)
         except KeyboardInterrupt:
-            print("\n👋 Encerrando...")
+            print("\n👋 Até mais. Encerrando...")
             break
         except Exception as e:
             print(f"❌ Erro: {e}")

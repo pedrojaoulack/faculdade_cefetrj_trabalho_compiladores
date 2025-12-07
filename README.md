@@ -45,6 +45,7 @@
 ### Comandos de Movimento
 
 robo move up; // Move o robô para cima move down; // Move o robô para baixo move left; // Move o robô para esquerda move right; // Move o robô para direita turn left; // Gira o robô para esquerda
+o comando sempre termina em ponto-e-vírgula (;)
 
 ### Gerenciamento de Inventário
 
@@ -118,7 +119,7 @@ $ python main.py
 🤖 RoboLang Interpreter v1.0
 ============================================================
 Linguagem de programação para controle de robô virtual
-Desenvolvido por: Pedro Henrique e Flávio Silva
+Desenvolvido por Pedro Henrique e Flávio Silva
 ============================================================
 
 💬 Modo Interativo (digite 'sair' para encerrar)
