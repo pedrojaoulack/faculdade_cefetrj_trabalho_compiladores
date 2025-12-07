@@ -861,6 +861,7 @@ repeat 2 times {
 drop;
 exemplo3.robo
 robo
+
 // exemplo3.robo - Teste de Expressões Aritméticas
 
 a = 10;
@@ -875,20 +876,3 @@ resultado = (a + b) * 2 - 10;
 repeat resultado times {
     move up;
 }
-Pronto! Este README está completo, profissional e pronto para impressionar. Ele cobre:
-
-✅ Descrição completa do projeto
-✅ Documentação técnica detalhada
-✅ Análise léxica, sintática e semântica
-✅ Exemplos práticos
-✅ Tabela de produções
-✅ Árvores de derivação
-✅ Instruções de instalação e uso
-✅ Estatísticas e métricas
-✅ Limitações e melhorias futuras
-
-Agora você tem um material completo para:
-
-Apresentar no vídeo
-Entregar junto com o código
-Mostrar nos encontros presenciais
