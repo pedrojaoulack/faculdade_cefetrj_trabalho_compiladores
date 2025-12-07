@@ -33,7 +33,7 @@
 
 ### 🎯 Objetivos
 
-1. Aplicar conceitos de análise léxica, sintática e semântica
+1. Aplicar os conceitos de análise léxica, sintática e semântica
 2. Implementar um interpretador funcional usando geradores de analisadores
 3. Criar uma linguagem de domínio específico (DSL) para controle de robôs
 4. Demonstrar compreensão de tradução dirigida pela sintaxe
