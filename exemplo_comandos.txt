@@ -7,5 +7,7 @@ repeat 3 times {turn up; move up; turn left; move left;} pick "chave"; pick "map
 
 dar tree
 
+repeat 3 times {turn up; move up; turn right; move right;}
 
-
+#exemplo arvore aceita
+repeat 2 times {turn down; move down;}        
