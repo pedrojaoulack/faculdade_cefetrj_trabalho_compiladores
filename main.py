@@ -45,7 +45,9 @@ def print_help():
     - grammar                       // Mostra gramática da linguagem
     - semantic                      // Mostra tabela semântica
     - tree                          // Mostra exemplo de árvore
+    - derivation                    // ✨ NOVO: Mostra verdadeira derivação do último código
     - tokens                        // Mostra tokens disponíveis
+    - status                        // Mostra estado do robô
 """)
 
 # ===== MODIFICAÇÃO: Função para exibir relatório de análise =====
@@ -84,6 +86,8 @@ def run_interactive():
     print("💬 Modo Interativo (digite 'sair' para encerrar)")
     print("Digite 'help' para ver os comandos disponíveis\n")
     
+    last_code = ""  # Armazena último código executado
+    
     while True:
         try:
             line = input("robo> ")
@@ -104,6 +108,13 @@ def run_interactive():
             elif line.strip().lower() == 'tree':
                 ParseTreeVisualizer.print_derivation_example()
                 continue
+            elif line.strip().lower() == 'derivation':  # ===== NOVO =====
+                if last_code:
+                    ParseTreeVisualizer.print_real_derivation(last_code)
+                else:
+                    print("❌ Nenhum código executado ainda!")
+                    print("   Execute algum código primeiro (ex: move up;)")
+                continue
             elif line.strip().lower() == 'tokens':
                 ParseTreeVisualizer.print_tokens_info()
                 continue
@@ -115,7 +126,9 @@ def run_interactive():
                 continue
             elif line.strip() == '':
                 continue
-                
+            
+            # ===== MODIFICAÇÃO: Armazenar código para análise de derivação =====
+            last_code = line
             parse(line)
         except KeyboardInterrupt:
             print("\n👋 Até mais. Encerrando...")

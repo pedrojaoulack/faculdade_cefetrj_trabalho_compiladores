@@ -12,6 +12,7 @@
 
 import ply.yacc as yacc
 from lexer import tokens
+from tree_visualizer import TreeNode, ParseTreeVisualizer
 import sys
 
 # ===== MODIFICAÇÃO: Definição da Classe de Ambiente do Robô =====
@@ -85,6 +86,19 @@ precedence = (
 # p[0] = resultado, p[1] = statement_list
 def p_program(p):
     '''program : statement_list'''
+    # ===== MODIFICAÇÃO: Capturar árvore de derivação =====
+    tree = TreeNode('program')
+    if isinstance(p[1], TreeNode):
+        tree.add_child(p[1])
+    elif isinstance(p[1], list):
+        # Se p[1] é lista de statements, criar nó statement_list
+        stmt_list = TreeNode('statement_list')
+        for stmt in p[1]:
+            if isinstance(stmt, TreeNode):
+                stmt_list.add_child(stmt)
+        tree.add_child(stmt_list)
+    
+    ParseTreeVisualizer.set_parse_tree(tree)
     p[0] = ('PROGRAM', p[1])
     print("\n✅ Programa executado com sucesso!")
     print(f"📍 Posição final do robô: {robot.position}")
@@ -97,10 +111,38 @@ def p_program(p):
 def p_statement_list(p):
     '''statement_list : statement_list statement
                      | statement'''
+    # ===== MODIFICAÇÃO: Criar nó de árvore =====
+    stmt_list_node = TreeNode('statement_list')
+    
     if len(p) == 3:
-        p[0] = p[1] + [p[2]]  # Adiciona novo statement à lista
+        # statement_list statement
+        if isinstance(p[1], TreeNode) and p[1].label == 'statement_list':
+            # p[1] já é um nó statement_list
+            stmt_list_node = p[1]
+        elif isinstance(p[1], list):
+            # p[1] é uma lista de statements (compatibilidade)
+            for stmt in p[1]:
+                if isinstance(stmt, TreeNode):
+                    stmt_list_node.add_child(stmt)
+        elif isinstance(p[1], TreeNode):
+            stmt_list_node.add_child(p[1])
+        
+        # Adiciona novo statement
+        if isinstance(p[2], TreeNode):
+            stmt_list_node.add_child(p[2])
+        elif isinstance(p[2], tuple):
+            stmt_node = TreeNode(p[2][0])
+            stmt_list_node.add_child(stmt_node)
+        
+        p[0] = stmt_list_node
     else:
-        p[0] = [p[1]]  # Inicia lista com primeiro statement
+        # Apenas statement
+        if isinstance(p[1], TreeNode):
+            stmt_list_node.add_child(p[1])
+            p[0] = stmt_list_node
+        else:
+            # Retorna lista para compatibilidade
+            p[0] = [p[1]]
 
 # Tipos de statements
 # AÇÃO SEMÂNTICA: Agrupa diferentes tipos de comando
@@ -114,22 +156,54 @@ def p_statement(p):
                 | while_stmt
                 | repeat_stmt
                 | block'''
-    p[0] = p[1]
+    # ===== MODIFICAÇÃO: Criar nó statement =====
+    stmt_node = TreeNode('statement')
+    if isinstance(p[1], TreeNode):
+        stmt_node.add_child(p[1])
+    p[0] = stmt_node
 
 # ===== MODIFICAÇÃO: Comandos de Movimento do Robô =====
 # Comando MOVE: move_stmt → MOVE direction SEMICOLON
 # AÇÃO SEMÂNTICA: Executa movimento do robô e retorna nó AST
 def p_move_stmt(p):
     '''move_stmt : MOVE direction SEMICOLON'''
-    robot.move(p[2])  # Executa a ação
-    p[0] = ('MOVE', p[2])
+    # ===== MODIFICAÇÃO: Capturar árvore =====
+    direction_tuple = p[2]  # (TreeNode, valor_string)
+    if isinstance(direction_tuple, tuple):
+        direction_node, direction_value = direction_tuple
+        robot.move(direction_value)
+    else:
+        # Compatibilidade com código antigo
+        robot.move(p[2])
+        direction_node = TreeNode('direction')
+        direction_node.add_child(TreeNode(p[2].upper(), p[2]))
+    
+    move_node = TreeNode('move_stmt')
+    move_node.add_child(TreeNode('MOVE', 'move'))
+    move_node.add_child(direction_node)
+    move_node.add_child(TreeNode('SEMICOLON', ';'))
+    p[0] = move_node
 
 # Comando TURN: turn_stmt → TURN direction SEMICOLON
 # AÇÃO SEMÂNTICA: Gira robô para nova direção
 def p_turn_stmt(p):
     '''turn_stmt : TURN direction SEMICOLON'''
-    robot.turn(p[2])
-    p[0] = ('TURN', p[2])
+    # ===== MODIFICAÇÃO: Capturar árvore =====
+    direction_tuple = p[2]  # (TreeNode, valor_string)
+    if isinstance(direction_tuple, tuple):
+        direction_node, direction_value = direction_tuple
+        robot.turn(direction_value)
+    else:
+        # Compatibilidade com código antigo
+        robot.turn(p[2])
+        direction_node = TreeNode('direction')
+        direction_node.add_child(TreeNode(p[2].upper(), p[2]))
+    
+    turn_node = TreeNode('turn_stmt')
+    turn_node.add_child(TreeNode('TURN', 'turn'))
+    turn_node.add_child(direction_node)
+    turn_node.add_child(TreeNode('SEMICOLON', ';'))
+    p[0] = turn_node
 
 # Comando PICK: pick_stmt → PICK STRING SEMICOLON
 # AÇÃO SEMÂNTICA: Adiciona item ao inventário
@@ -152,7 +226,12 @@ def p_direction(p):
                 | DOWN
                 | LEFT
                 | RIGHT'''
-    p[0] = p[1].lower()
+    # ===== MODIFICAÇÃO: Retorna tupla (nó, valor string) =====
+    direction_node = TreeNode('direction')
+    p_value = p[1].lower()
+    direction_node.add_child(TreeNode(p[1], p_value))
+    # Retorna tupla para compatibilidade
+    p[0] = (direction_node, p_value)
 
 # ===== MODIFICAÇÃO: Variáveis e Expressões =====
 # Atribuição: assign_stmt → IDENTIFIER ASSIGN expression SEMICOLON
