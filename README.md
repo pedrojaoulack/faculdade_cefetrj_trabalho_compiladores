@@ -145,10 +145,16 @@ bash
 python main.py exemplo.robo
 python main.py programa.robo
 
-Comando	Descrição
-help	Exibe ajuda com todos os comandos
-status	Mostra estado atual do robô
-sair	Encerra o interpretador
+| Comando | Descrição |
+|---------|-----------|
+| help | Exibe ajuda com todos os comandos |
+| grammar | Mostra gramática da linguagem |
+| semantic | Mostra tabela de produções e ações semânticas |
+| tree | Mostra exemplo de árvore de derivação |
+| **derivation** | ✨ **NOVO**: Mostra verdadeira derivação do último código executado |
+| tokens | Lista todos os tokens da linguagem |
+| status | Mostra estado atual do robô (posição, direção, inventário, variáveis) |
+| sair | Encerra o interpretador |
 
 
 📘 README.md - RoboLang Interpreter
@@ -542,6 +548,69 @@ program
                           contador   2      move_stmt
                           (val:0)         (executa 2x)
                                           (pos:[0,0]→[0,2])
+
+## ✨ Análise Real de Derivações (Novo!)
+
+O interpretador agora captura e exibe **verdadeiras derivações leftmost** do seu código, mostrando passo a passo como o parser processa a linguagem.
+
+### Como Usar
+
+#### Modo Interativo
+
+```bash
+robo> move up;
+🤖 Robô moveu para up. Posição atual: [5, 6]
+
+robo> derivation
+🌳 ANÁLISE REAL DE DERIVAÇÃO (Leftmost Derivation)
+
+📝 Código parseado: move up;
+
+📊 Derivação (Leftmost Derivation):
+   1. program
+   2. program ⇒ statement_list
+   3. statement_list ⇒ statement
+   4. statement ⇒ move_stmt
+   5. move_stmt ⇒ MOVE direction SEMICOLON
+   6. direction ⇒ up
+
+🌲 Árvore de Derivação (formato ASCII):
+
+[program]
+└── [statement_list]
+    └── [statement]
+        └── [move_stmt]
+            ├── MOVE
+            ├── [direction]
+            │   └── up
+            └── SEMICOLON
+```
+
+#### Modo Arquivo
+
+Ao executar um arquivo `.robo`, o interpretador automaticamente exibe a análise:
+
+```bash
+python main.py exemplo.robo
+# ... saída de execução ...
+# ... e no final: análise de derivação ...
+```
+
+### Recursos Educacionais
+
+A análise de derivações é útil para:
+
+✅ **Entender parsing**: Veja como o compilador interpreta seu código
+✅ **Aprender gramática**: Observe quais regras foram aplicadas
+✅ **Debugar problemas**: Se algo não foi parseado, veja onde falhou
+✅ **Visualizar estrutura**: Compreenda a hierarquia de seu programa
+
+### Documentação Detalhada
+
+Para um guia completo sobre como usar derivações, veja: **[USANDO_DERIVACOES.md](USANDO_DERIVACOES.md)**
+
+---
+
 📁 Estrutura do Projeto
 faculdade_cefetrj_trabalho_compiladores/
 │
