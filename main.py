@@ -106,7 +106,11 @@ def run_interactive():
                 ParseTreeVisualizer.print_semantic_table()
                 continue
             elif line.strip().lower() == 'tree':
-                ParseTreeVisualizer.print_derivation_example()
+                # ===== MODIFICAÇÃO: Mostrar verdadeira derivação em vez de exemplo =====
+                if last_code:
+                    ParseTreeVisualizer.print_real_derivation(last_code)
+                else:
+                    ParseTreeVisualizer.print_derivation_example()
                 continue
             elif line.strip().lower() == 'derivation':  # ===== NOVO =====
                 if last_code:
