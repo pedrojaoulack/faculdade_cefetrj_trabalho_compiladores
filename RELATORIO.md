@@ -1199,6 +1199,62 @@ O código está totalmente documentado, funcional, e atende a todos os requisito
 
 ---
 
+## 📌 Resumo de Modificações (Resposta ao Requisito 4b)
+
+### Análise Léxica - Modificações Realizadas
+
+| Aspecto | Detalhes |
+|--------|----------|
+| **Tokens Criados** | 40+ tokens (vs. ~8 de uma calculadora) |
+| **Expressões Regulares** | 4 novas: números decimais, strings, identificadores, comentários |
+| **Palavras Reservadas** | 13 palavras-chave para RoboLang (move, turn, pick, drop, if, else, etc.) |
+| **Local no Código** | `lexer.py` - linhas 1-200 |
+| **Arquivo Gerado** | Tabelas de análise léxica no diretório (`lexer.lex()`) |
+
+### Análise Sintática - Modificações Realizadas
+
+| Aspecto | Detalhes |
+|--------|----------|
+| **Produções Criadas** | 25 produções (vs. ~7 de uma calculadora) |
+| **Novos Comandos** | 4 comandos de movimento (move, turn, pick, drop) |
+| **Controle de Fluxo** | 5 novas estruturas (if, else, while, repeat, block) |
+| **Condições** | 6 operadores de comparação |
+| **Precedência** | Definida para operadores aritméticos e comparadores |
+| **Eliminação de Ambiguidade** | Associatividade esquerda para expressões |
+| **Local no Código** | `parser.py` - linhas 1-350 |
+| **Arquivo Gerado** | `parsetab.py` com tabelas LALR automáticas |
+
+### Ações Semânticas - Modificações Realizadas
+
+| Ação | Produção | Complexidade | Local |
+|------|----------|--------------|-------|
+| **Movimento do Robô** | `move_stmt`, `turn_stmt` | Média | `parser.py:220-240` |
+| **Gerenciamento de Inventário** | `pick_stmt`, `drop_stmt` | Média | `parser.py:245-260` |
+| **Variáveis** | `assign_stmt` | Média | `parser.py:265-270` |
+| **Condicionais** | `if_stmt` | Alta | `parser.py:275-285` |
+| **Loops** | `while_stmt`, `repeat_stmt` | Alta | `parser.py:290-300` |
+| **Avaliação de Condições** | `condition` | Média | `parser.py:305-325` |
+| **Operações Aritméticas** | `expression` | Baixa | `parser.py:330-360` |
+
+### Código de Usuário Criado
+
+| Classe/Função | Propósito | Linhas |
+|---------------|----------|--------|
+| `RobotEnvironment` | Gerencia estado do robô virtual | 15-50 |
+| `robot` (instância global) | Objeto robô para interpretação | Linha 52 |
+| `parse()` | Função principal de análise | Linha 360 |
+| `ParseTreeVisualizer` | Exibe gramática e árvores | `tree_visualizer.py` |
+
+### Resumo Quantitativo
+
+- **Total de Linhas de Código**: 1.200+ (entre lexer, parser, tree_visualizer, main)
+- **Novos Tokens**: 32 (de uma calculadora)
+- **Novas Produções Gramaticais**: 18
+- **Novas Ações Semânticas**: 15+
+- **Documentação em Código**: 100+ comentários explicativos com marcação "MODIFICAÇÃO"
+
+---
+
 **Data de Conclusão**: Dezembro de 2025  
 **Autores**: Pedro Henrique Jaoulack de Carvalho e Flávio Silva Almeida  
 **Instituição**: CEFET-RJ - Centro Federal de Educação Tecnológica Celso Suckow da Fonseca
