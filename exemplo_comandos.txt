@@ -1,0 +1,11 @@
+
+
+
+sequencia 1 (longa):
+
+repeat 3 times {turn up; move up; turn left; move left;} pick "chave"; pick "mapa"; drop;
+
+dar tree
+
+
+
