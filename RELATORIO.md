@@ -13,14 +13,15 @@
 
 1. [Objetivo do Projeto](#objetivo-do-projeto)
 2. [Gerador de Analisadores Escolhido](#gerador-de-analisadores-escolhido)
-3. [Análise Léxica](#análise-léxica)
-4. [Análise Sintática](#análise-sintática)
-5. [Ações Semânticas](#ações-semânticas)
-6. [Tabela de Produções e Ações](#tabela-de-produções-e-ações-semânticas)
-7. [Exemplo de Derivação e Árvore](#exemplo-de-derivação-e-árvore)
-8. [Tutorial de Uso](#tutorial-de-uso)
-9. [Exemplos de Execução](#exemplos-de-execução)
-10. [Código Modificado](#código-modificado)
+3. [Modificações e Inclusões: Regras Originais vs. RoboLang](#-modificações-e-inclusões-regras-originais-vs-robolang)
+4. [Análise Léxica](#análise-léxica)
+5. [Análise Sintática](#análise-sintática)
+6. [Ações Semânticas Criadas](#️-ações-semânticas-criadas)
+7. [Tabela de Produções e Ações](#tabela-de-produções-e-ações-semânticas)
+8. [Exemplo de Derivação e Árvore](#exemplo-de-derivação-e-árvore)
+9. [Tutorial de Uso](#tutorial-de-uso)
+10. [Exemplos de Execução](#exemplos-de-execução)
+11. [Código Modificado](#código-modificado)
 
 ---
 
@@ -62,6 +63,82 @@ PLY é uma implementação de **Lex** e **Yacc** em Python, similar aos geradore
 | **Lex** | Análise Léxica - Reconhecimento de tokens | `lexer.py` |
 | **Yacc** | Análise Sintática - Parsing e ações semânticas | `parser.py` |
 | **Visualizador** | Exibição de gramática e árvores | `tree_visualizer.py` |
+
+---
+
+## 📊 Modificações e Inclusões: Regras Originais vs. RoboLang
+
+Esta seção destaca as **modificações e inclusões** realizadas no projeto, comparando com um exemplo padrão de calculadora aritmética.
+
+### 2.1 Regras da Análise Léxica
+
+#### Tokens Originais (Calculadora Padrão) vs. Tokens Criados (RoboLang)
+
+| Categoria | Tokens Originais | Tokens Criados para RoboLang |
+|-----------|-----------------|------------------------------|
+| **Operadores Aritméticos** | `+`, `-`, `*`, `/` | `+`, `-`, `*`, `/` *(mantidos)* |
+| **Comparadores** | `==`, `!=`, `<`, `>` | `==`, `!=`, `<`, `>`, `<=`, `>=` *(expandidos)* |
+| **Delimitadores** | `(`, `)` | `(`, `)`, `{`, `}`, `;`, `,` *(expandidos)* |
+| **Literais** | `NUMBER`, `IDENTIFIER` | `NUMBER`, `IDENTIFIER`, `STRING` *(novo)* |
+| **Comandos** | *(não aplicável)* | `MOVE`, `TURN`, `PICK`, `DROP` *(novo)* |
+| **Controle de Fluxo** | *(não aplicável)* | `IF`, `ELSE`, `WHILE`, `REPEAT`, `TIMES` *(novo)* |
+| **Direções** | *(não aplicável)* | `UP`, `DOWN`, `LEFT`, `RIGHT` *(novo)* |
+| **Operadores** | `=` *(opcional)* | `=` *(ASSIGN)* *(novo)* |
+| **Total de Tokens** | ~8-10 | **40+** *(5x mais)* |
+
+### 2.2 Expressões Regulares Criadas
+
+#### Expressões Originais (Calculadora)
+```python
+# Reconhecimento básico de números
+r'\d+'                    # Apenas inteiros
+```
+
+#### Expressões Criadas para RoboLang
+```python
+# Números inteiros e decimais
+r'\d+(\.\d+)?'           # Inteiros E decimais (ex: 42, 3.14)
+
+# Strings entre aspas duplas
+r'"[^"]*"'               # Texto entre aspas (ex: "chave", "mapa")
+
+# Identificadores (nomes de variáveis)
+r'[a-zA-Z_][a-zA-Z_0-9]*'  # Nomes válidos (ex: x, contador, var_1)
+
+# Comentários
+r'//.*'                  # Comentários de linha (ex: // comentário)
+```
+
+### 2.3 Palavras Reservadas Criadas
+
+#### Palavras Originais (Calculadora)
+```python
+reserved = {}  # Nenhuma palavra reservada
+```
+
+#### Palavras Criadas para RoboLang
+```python
+reserved = {
+    # Comandos de movimento
+    'move': 'MOVE',
+    'turn': 'TURN',
+    'pick': 'PICK',
+    'drop': 'DROP',
+    
+    # Controle de fluxo
+    'if': 'IF',
+    'else': 'ELSE',
+    'while': 'WHILE',
+    'repeat': 'REPEAT',
+    'times': 'TIMES',
+    
+    # Direções
+    'up': 'UP',
+    'down': 'DOWN',
+    'left': 'LEFT',
+    'right': 'RIGHT',
+}
+```
 
 ---
 
@@ -265,7 +342,84 @@ expression      → expression PLUS expression
 
 **Total de Produções**: 25 (sem contar a regra inicial do parser)
 
-### 2.2 Precedência de Operadores
+### 3.2 Comparação: Regras Originais vs. Criadas
+
+#### Regras Originais (Calculadora Aritmética)
+```
+program        → expression
+expression     → expression + expression
+               | expression - expression
+               | expression * expression
+               | expression / expression
+               | ( expression )
+               | NUMBER
+```
+
+#### Regras Criadas para RoboLang
+```
+program → statement_list                          # (NOVO)
+
+statement_list → statement_list statement         # (NOVO)
+               | statement
+
+statement → move_stmt | turn_stmt | pick_stmt     # (NOVO)
+          | drop_stmt | assign_stmt | if_stmt     # (NOVO)
+          | while_stmt | repeat_stmt | block      # (NOVO)
+
+# Comandos de movimento (NOVO)
+move_stmt → MOVE direction SEMICOLON
+turn_stmt → TURN direction SEMICOLON
+pick_stmt → PICK STRING SEMICOLON
+drop_stmt → DROP SEMICOLON
+
+# Direções (NOVO)
+direction → UP | DOWN | LEFT | RIGHT
+
+# Variáveis e atribuição (NOVO)
+assign_stmt → IDENTIFIER ASSIGN expression SEMICOLON
+
+# Controle de fluxo (NOVO)
+if_stmt → IF LPAREN condition RPAREN block
+        | IF LPAREN condition RPAREN block ELSE block
+
+while_stmt → WHILE LPAREN condition RPAREN block
+repeat_stmt → REPEAT expression TIMES block
+
+# Blocos (NOVO)
+block → LBRACE statement_list RBRACE
+
+# Condições (EXPANSÃO - calculadora não tinha)
+condition → expression EQUALS expression
+          | expression NOTEQUALS expression
+          | expression LESS expression
+          | expression GREATER expression
+          | expression LESSEQUAL expression
+          | expression GREATEREQUAL expression
+
+# Expressões (MANTIDAS da calculadora)
+expression → expression PLUS expression
+           | expression MINUS expression
+           | expression MULTIPLY expression
+           | expression DIVIDE expression
+           | LPAREN expression RPAREN
+           | NUMBER
+           | IDENTIFIER
+```
+
+#### Resumo das Modificações Gramaticais
+
+| Tipo | Calculadora | RoboLang | Mudança |
+|------|------------|----------|---------|
+| **Produções Aritméticas** | 7 | 7 | Mantidas |
+| **Produção Raiz** | 1 (`program`) | 1 (`program`) | Modificada |
+| **Comandos de Movimento** | 0 | 4 | **Adicionadas** |
+| **Variáveis/Atribuição** | 0 | 1 | **Adicionada** |
+| **Controle de Fluxo** | 0 | 5 | **Adicionadas** |
+| **Condições** | 0 | 6 | **Adicionadas** |
+| **Blocos** | 0 | 1 | **Adicionada** |
+| **TOTAL** | ~7 | **25** | **+257%** |
+
+### 3.3 Precedência de Operadores
 
 Define como operadores são interpretados quando há ambiguidade:
 
@@ -288,13 +442,144 @@ precedence = (
 2. **Precedência**: Multiplicação tem precedência sobre adição
 3. **Produção recursiva à esquerda**: Melhor performance com LALR
 
+**Exemplo de Resolução**:
+- Expressão: `2 + 3 * 4`
+- Interpretação: `2 + (3 * 4) = 14` ✅ (não `(2+3)*4 = 20` ❌)
+
+### 3.3 Eliminação de Ambiguidade
+
+1. **Associatividade**: `left` resolve `a - b - c` como `(a - b) - c`
+2. **Precedência**: Multiplicação tem precedência sobre adição
+3. **Produção recursiva à esquerda**: Melhor performance com LALR
+
+---
+
+## 4️⃣ Ações Semânticas Criadas
+
+Esta seção detalha as ações semânticas (interpretação do código) criadas para RoboLang.
+
+### 4.1 Comparação: Ações Originais vs. Criadas
+
+#### Ações Originais (Calculadora)
+```python
+# Operações aritméticas apenas
+def p_expression_binop(p):
+    '''expression : expression PLUS expression
+                  | expression MINUS expression
+                  | expression MULTIPLY expression
+                  | expression DIVIDE expression'''
+    if p[2] == '+':
+        p[0] = p[1] + p[3]          # Retorna resultado
+    elif p[2] == '-':
+        p[0] = p[1] - p[3]
+    elif p[2] == '*':
+        p[0] = p[1] * p[3]
+    elif p[2] == '/':
+        p[0] = p[1] / p[3]
+
+def p_expression_number(p):
+    '''expression : NUMBER'''
+    p[0] = p[1]                      # Apenas retorna número
+```
+
+#### Ações Criadas para RoboLang
+```python
+# 1. COMANDO DE MOVIMENTO (NOVO)
+def p_move_stmt(p):
+    '''move_stmt : MOVE direction SEMICOLON'''
+    robot.move(p[2])                 # Executa movimento
+    print(f"🤖 Robô moveu para {p[2]}. Posição: {robot.position}")
+
+# 2. ATRIBUIÇÃO DE VARIÁVEL (NOVO)
+def p_assign_stmt(p):
+    '''assign_stmt : IDENTIFIER ASSIGN expression SEMICOLON'''
+    robot.variables[p[1]] = p[3]     # Armazena em tabela de símbolos
+    print(f"💾 Variável {p[1]} = {p[3]}")
+
+# 3. CONDICIONAL (NOVO)
+def p_if_stmt(p):
+    '''if_stmt : IF LPAREN condition RPAREN block
+              | IF LPAREN condition RPAREN block ELSE block'''
+    if p[3]:                         # Avalia condição
+        # Executa p[5] (bloco true)
+    elif len(p) == 8:               # Tem ELSE
+        # Executa p[7] (bloco false)
+
+# 4. OPERAÇÃO COM INVENTÁRIO (NOVO)
+def p_pick_stmt(p):
+    '''pick_stmt : PICK STRING SEMICOLON'''
+    robot.pick_item(p[2])            # Adiciona item ao inventário
+    print(f"📦 Robô pegou: {p[2]}")
+
+def p_drop_stmt(p):
+    '''drop_stmt : DROP SEMICOLON'''
+    robot.drop_item()                # Remove item do inventário
+    print(f"📤 Robô soltou item")
+```
+
+### 4.2 Tabela de Ações Semânticas por Tipo
+
+| Produção | Tipo | Ação Semântica | Complexidade |
+|----------|------|----------------|--------------|
+| `move_stmt` | **Novo** | Atualiza posição do robô + output | Média |
+| `turn_stmt` | **Novo** | Altera direção do robô + output | Baixa |
+| `pick_stmt` | **Novo** | Adiciona item ao inventário + output | Média |
+| `drop_stmt` | **Novo** | Remove item do inventário + output | Média |
+| `assign_stmt` | **Novo** | Armazena variável em tabela de símbolos | Média |
+| `if_stmt` | **Novo** | Avalia condição e executa bloco apropriado | Alta |
+| `while_stmt` | **Novo** | Loop condicional com múltiplas iterações | Alta |
+| `repeat_stmt` | **Novo** | Loop fixo N vezes | Alta |
+| `condition` | **Novo** | Avalia comparações (<, >, ==, !=, <=, >=) | Média |
+| `expression PLUS` | Mantida | Soma duas expressões | Baixa |
+| `expression MINUS` | Mantida | Subtrai duas expressões | Baixa |
+| `expression MULTIPLY` | Mantida | Multiplica duas expressões | Baixa |
+| `expression DIVIDE` | Mantida | Divide duas expressões | Baixa |
+| `expression NUMBER` | Mantida | Retorna valor numérico | Baixa |
+| `expression IDENTIFIER` | Expandida | Busca variável ou retorna 0 | Baixa |
+
+### 4.3 Código de Usuário - Classe RobotEnvironment (NOVO)
+
+Classe criada para gerenciar o estado do robô durante a interpretação:
+
+```python
+class RobotEnvironment:
+    """NOVO: Gerencia estado do robô virtual"""
+    
+    def __init__(self):
+        self.position = [5, 5]           # Posição inicial [x, y]
+        self.direction = 'up'             # Direção atual
+        self.inventory = []               # Lista de itens
+        self.variables = {}               # Tabela de símbolos
+        self.grid_size = 10               # Tamanho do mapa
+    
+    def move(self, direction):
+        """NOVO: Move robô com limites de mapa"""
+        if direction == 'up':
+            self.position[1] = min(self.position[1] + 1, self.grid_size)
+        elif direction == 'down':
+            self.position[1] = max(self.position[1] - 1, 0)
+        elif direction == 'left':
+            self.position[0] = max(self.position[0] - 1, 0)
+        elif direction == 'right':
+            self.position[0] = min(self.position[0] + 1, self.grid_size)
+    
+    def turn(self, direction):
+        """NOVO: Altera direção do robô"""
+        self.direction = direction
+    
+    def pick_item(self, item):
+        """NOVO: Adiciona item ao inventário"""
+        self.inventory.append(item)
+    
+    def drop_item(self):
+        """NOVO: Remove item do inventário"""
+        if self.inventory:
+            self.inventory.pop()
+```
+
 ---
 
 ## Ações Semânticas
-
-As ações semânticas executam o código interpretado. Cada produção tem uma ação associada.
-
-### 3.1 Ação para Comandos de Movimento
 
 ```python
 # PRODUÇÃO: move_stmt → MOVE direction SEMICOLON
