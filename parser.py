@@ -20,7 +20,7 @@ import sys
 # (MODIFICADO - criado para armazenar estado do robô)
 class RobotEnvironment:
     def __init__(self):
-        self.position = [0, 0]  # [x, y]
+        self.position = [5, 5]  # [x, y] - Posição inicial no meio do mapa
         self.direction = 'up'   # up, down, left, right
         self.inventory = []
         self.variables = {}
