@@ -1,11 +1,23 @@
 # parser.py - Analisador Sintático e Semântico para RoboLang
+# ===== MODIFICAÇÃO PRINCIPAL: Implementação do Parser com PLY =====
+# Gerador de Analisadores: PLY (Python Lex-Yacc)
+# Referência: https://www.dabeaz.com/ply/
+# 
+# Este arquivo implementa:
+# 1. ANÁLISE SINTÁTICA (Yacc) - Análise da estrutura gramatical
+# 2. AÇÕES SEMÂNTICAS - Interpretação e execução do código RoboLang
+# 3. TABELAS LALR - Geradas automaticamente pelo PLY
+# 4. GERADORES: Usa expressões regulares do LEXER (lexer.py) como entrada
+# ======================================================================
+
 import ply.yacc as yacc
 from lexer import tokens
 import sys
 
-# ===== INÍCIO DAS MODIFICAÇÕES - Gramática e ações semânticas =====
-
-# Ambiente de execução (MODIFICADO - criado para armazenar estado do robô)
+# ===== MODIFICAÇÃO: Definição da Classe de Ambiente do Robô =====
+# Esta classe armazena o estado do robô durante a interpretação
+# Inclui: posição, direção, inventário e variáveis globais
+# (MODIFICADO - criado para armazenar estado do robô)
 class RobotEnvironment:
     def __init__(self):
         self.position = [0, 0]  # [x, y]
@@ -47,7 +59,13 @@ class RobotEnvironment:
 # Ambiente global
 robot = RobotEnvironment()
 
-# Precedência de operadores (MODIFICADO - definida para evitar ambiguidade)
+# ===== MODIFICAÇÃO: Definição de Precedência de Operadores =====
+# A precedência resolva ambiguidades na gramática (exemplo: 2+3*4 = 14 ou 20?)
+# Regras de precedência (do menor para o maior):
+# 1. left: associação à esquerda
+# 2. PLUS, MINUS: operadores de mesmo nível (soma e subtração)
+# 3. MULTIPLY, DIVIDE: precedência maior que soma/subtração
+# (MODIFICADO - definida para evitar ambiguidade)
 precedence = (
     ('left', 'PLUS', 'MINUS'),
     ('left', 'MULTIPLY', 'DIVIDE'),
@@ -55,9 +73,16 @@ precedence = (
     ('nonassoc', 'EQUALS', 'NOTEQUALS'),
 )
 
-# ===== REGRAS GRAMATICAIS (MODIFICADO - criadas para RoboLang) =====
+# ===== MODIFICAÇÃO: REGRAS GRAMATICAIS E AÇÕES SEMÂNTICAS =====
+# Cada função p_NOME define uma produção gramatical
+# A string docstring contém a regra BNF
+# O código define a ação semântica (interpretação da regra)
+# Exemplo: p_expression_binop implementa: expression → expression OPERATOR expression
+# (MODIFICADO - criadas para RoboLang)
 
 # Regra inicial
+# AÇÃO SEMÂNTICA: Exibe mensagem de conclusão e estado final do robô
+# p[0] = resultado, p[1] = statement_list
 def p_program(p):
     '''program : statement_list'''
     p[0] = ('PROGRAM', p[1])
@@ -67,15 +92,18 @@ def p_program(p):
     print(f"🎒 Inventário: {robot.inventory}")
 
 # Lista de statements
+# AÇÃO SEMÂNTICA: Acumula statements em uma lista
+# Produção recursiva à esquerda para melhor performance (LALR)
 def p_statement_list(p):
     '''statement_list : statement_list statement
                      | statement'''
     if len(p) == 3:
-        p[0] = p[1] + [p[2]]
+        p[0] = p[1] + [p[2]]  # Adiciona novo statement à lista
     else:
-        p[0] = [p[1]]
+        p[0] = [p[1]]  # Inicia lista com primeiro statement
 
 # Tipos de statements
+# AÇÃO SEMÂNTICA: Agrupa diferentes tipos de comando
 def p_statement(p):
     '''statement : move_stmt
                 | turn_stmt
@@ -88,31 +116,37 @@ def p_statement(p):
                 | block'''
     p[0] = p[1]
 
-# Comando MOVE (MODIFICADO)
+# ===== MODIFICAÇÃO: Comandos de Movimento do Robô =====
+# Comando MOVE: move_stmt → MOVE direction SEMICOLON
+# AÇÃO SEMÂNTICA: Executa movimento do robô e retorna nó AST
 def p_move_stmt(p):
     '''move_stmt : MOVE direction SEMICOLON'''
-    robot.move(p[2])
+    robot.move(p[2])  # Executa a ação
     p[0] = ('MOVE', p[2])
 
-# Comando TURN (MODIFICADO)
+# Comando TURN: turn_stmt → TURN direction SEMICOLON
+# AÇÃO SEMÂNTICA: Gira robô para nova direção
 def p_turn_stmt(p):
     '''turn_stmt : TURN direction SEMICOLON'''
     robot.turn(p[2])
     p[0] = ('TURN', p[2])
 
-# Comando PICK (MODIFICADO)
+# Comando PICK: pick_stmt → PICK STRING SEMICOLON
+# AÇÃO SEMÂNTICA: Adiciona item ao inventário
 def p_pick_stmt(p):
     '''pick_stmt : PICK STRING SEMICOLON'''
     robot.pick_item(p[2])
     p[0] = ('PICK', p[2])
 
-# Comando DROP (MODIFICADO)
+# Comando DROP: drop_stmt → DROP SEMICOLON
+# AÇÃO SEMÂNTICA: Remove item do inventário
 def p_drop_stmt(p):
     '''drop_stmt : DROP SEMICOLON'''
     robot.drop_item()
     p[0] = ('DROP',)
 
-# Direções (MODIFICADO)
+# Direções: direction → UP | DOWN | LEFT | RIGHT
+# AÇÃO SEMÂNTICA: Converte token para string em minúsculas
 def p_direction(p):
     '''direction : UP
                 | DOWN
@@ -120,29 +154,35 @@ def p_direction(p):
                 | RIGHT'''
     p[0] = p[1].lower()
 
-# Atribuição de variável (MODIFICADO)
+# ===== MODIFICAÇÃO: Variáveis e Expressões =====
+# Atribuição: assign_stmt → IDENTIFIER ASSIGN expression SEMICOLON
+# AÇÃO SEMÂNTICA: Armazena valor em variável global
 def p_assign_stmt(p):
     '''assign_stmt : IDENTIFIER ASSIGN expression SEMICOLON'''
-    robot.variables[p[1]] = p[3]
+    robot.variables[p[1]] = p[3]  # Armazena na tabela de símbolos
     print(f"💾 Variável {p[1]} = {p[3]}")
     p[0] = ('ASSIGN', p[1], p[3])
 
-# Estrutura IF (MODIFICADO)
+# ===== MODIFICAÇÃO: Estruturas de Controle de Fluxo =====
+# IF: if_stmt → IF LPAREN condition RPAREN block [ELSE block]
+# AÇÃO SEMÂNTICA: Executa bloco se condição verdadeira, else opcional
 def p_if_stmt(p):
     '''if_stmt : IF LPAREN condition RPAREN block
               | IF LPAREN condition RPAREN block ELSE block'''
     if p[3]:  # Se a condição é verdadeira
         p[0] = ('IF', p[3], p[5])
-    elif len(p) == 8:  # Se tem ELSE
+    elif len(p) == 8:  # Se tem ELSE (len=8: if, (, condition, ), block, else, block)
         p[0] = ('IF', p[3], p[7])
 
-# Estrutura WHILE (MODIFICADO)
+# WHILE: while_stmt → WHILE LPAREN condition RPAREN block
+# AÇÃO SEMÂNTICA: Cria nó de loop enquanto (execução não implementada completamente)
 def p_while_stmt(p):
     '''while_stmt : WHILE LPAREN condition RPAREN block'''
     # Implementação simplificada - apenas cria o nó da árvore
     p[0] = ('WHILE', p[3], p[5])
 
-# Estrutura REPEAT (MODIFICADO)
+# REPEAT: repeat_stmt → REPEAT expression TIMES block
+# AÇÃO SEMÂNTICA: Executa bloco N vezes
 def p_repeat_stmt(p):
     '''repeat_stmt : REPEAT expression TIMES block'''
     times = int(p[2])
@@ -151,12 +191,16 @@ def p_repeat_stmt(p):
         pass
     p[0] = ('REPEAT', p[2], p[4])
 
-# Bloco de código (MODIFICADO)
+# Bloco: block → LBRACE statement_list RBRACE
+# AÇÃO SEMÂNTICA: Agrupa statements em um bloco
 def p_block(p):
     '''block : LBRACE statement_list RBRACE'''
     p[0] = ('BLOCK', p[2])
 
-# Condições (MODIFICADO)
+# ===== MODIFICAÇÃO: Condições e Comparações =====
+# Condições: condition → expression COMPARADOR expression
+# AÇÃO SEMÂNTICA: Avalia expressão booleana
+# Comparadores: ==, !=, <, >, <=, >=
 def p_condition(p):
     '''condition : expression EQUALS expression
                 | expression NOTEQUALS expression
@@ -177,7 +221,11 @@ def p_condition(p):
     elif p[2] == '>=':
         p[0] = p[1] >= p[3]
 
-# Expressões aritméticas (MODIFICADO)
+# ===== MODIFICAÇÃO: Expressões Aritméticas =====
+# Expressões binarias: expression → expression OPERADOR expression
+# AÇÃO SEMÂNTICA: Realiza operação aritmética
+# Operadores: +, -, *, /
+# Precedência é resolvida pelas regras de precedence definidas acima
 def p_expression_binop(p):
     '''expression : expression PLUS expression
                  | expression MINUS expression
@@ -192,17 +240,20 @@ def p_expression_binop(p):
     elif p[2] == '/':
         p[0] = p[1] / p[3]
 
-# Expressão com parênteses (MODIFICADO)
+# Expressão com parênteses: expression → LPAREN expression RPAREN
+# AÇÃO SEMÂNTICA: Retorna valor da expressão dentro de parênteses
 def p_expression_group(p):
     '''expression : LPAREN expression RPAREN'''
     p[0] = p[2]
 
-# Expressão com número (MODIFICADO)
+# Expressão com número: expression → NUMBER
+# AÇÃO SEMÂNTICA: Retorna valor numérico (inteiro ou float)
 def p_expression_number(p):
     '''expression : NUMBER'''
     p[0] = p[1]
 
-# Expressão com variável (MODIFICADO)
+# Expressão com variável: expression → IDENTIFIER
+# AÇÃO SEMÂNTICA: Busca valor da variável na tabela de símbolos
 def p_expression_identifier(p):
     '''expression : IDENTIFIER'''
     if p[1] in robot.variables:
@@ -212,15 +263,18 @@ def p_expression_identifier(p):
         p[0] = 0
 
 # Tratamento de erros sintáticos
+# Função chamada quando o parser encontra um erro
 def p_error(p):
     if p:
         print(f"❌ Erro de sintaxe no token '{p.value}' (linha {p.lineno})")
     else:
         print("❌ Erro de sintaxe no final do arquivo")
 
-# ===== FIM DAS MODIFICAÇÕES =====
+# ===== FIM DAS MODIFICAÇÕES DO PARSER =====
 
 # Construir o parser
+# yacc.yacc() gera as tabelas LALR automaticamente
+# Salva em parsetab.py (já pré-compilado)
 parser = yacc.yacc()
 
 # Função para analisar código

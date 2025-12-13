@@ -1,5 +1,7 @@
 # main.py - Programa Principal do Interpretador RoboLang
+# ===== MODIFICAÇÕES: Adicionadas visualizações de árvore, gramática e tabelas semânticas =====
 from parser import parse, robot
+from tree_visualizer import ParseTreeVisualizer
 import sys
 
 def print_banner():
@@ -38,7 +40,30 @@ def print_help():
     - Comparação: ==, !=, <, >, <=, >=
     
     Comentários: // comentário
+    
+    Comandos REPL:
+    - grammar                       // Mostra gramática da linguagem
+    - semantic                      // Mostra tabela semântica
+    - tree                          // Mostra exemplo de árvore
+    - tokens                        // Mostra tokens disponíveis
 """)
+
+# ===== MODIFICAÇÃO: Função para exibir relatório de análise =====
+def print_analysis_report():
+    """Exibe gramática, tabelas semânticas e árvore de derivação"""
+    print("\n" + "🔍 ANÁLISE LÉXICA E SINTÁTICA CONCLUÍDA".center(70))
+    
+    # Exibir gramática
+    ParseTreeVisualizer.print_grammar()
+    
+    # Exibir tokens
+    ParseTreeVisualizer.print_tokens_info()
+    
+    # Exibir tabela semântica
+    ParseTreeVisualizer.print_semantic_table()
+    
+    # Exibir exemplo de derivação
+    ParseTreeVisualizer.print_derivation_example()
 
 def run_file(filename):
     """Executa um arquivo .robo"""
@@ -47,6 +72,8 @@ def run_file(filename):
             code = f.read()
         print(f"📄 Executando arquivo: {filename}\n")
         parse(code)
+        # ===== MODIFICAÇÃO: Exibir gramática e árvore após execução =====
+        print_analysis_report()
     except FileNotFoundError:
         print(f"❌ Arquivo '{filename}' não encontrado!")
     except Exception as e:
@@ -66,6 +93,19 @@ def run_interactive():
                 break
             elif line.strip().lower() == 'help':
                 print_help()
+                continue
+            # ===== MODIFICAÇÃO: Adicionar comandos para visualizar análise =====
+            elif line.strip().lower() == 'grammar':
+                ParseTreeVisualizer.print_grammar()
+                continue
+            elif line.strip().lower() == 'semantic':
+                ParseTreeVisualizer.print_semantic_table()
+                continue
+            elif line.strip().lower() == 'tree':
+                ParseTreeVisualizer.print_derivation_example()
+                continue
+            elif line.strip().lower() == 'tokens':
+                ParseTreeVisualizer.print_tokens_info()
                 continue
             elif line.strip().lower() == 'status':
                 print(f"📍 Posição: {robot.position}")
