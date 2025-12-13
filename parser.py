@@ -60,6 +60,31 @@ class RobotEnvironment:
 # Ambiente global
 robot = RobotEnvironment()
 
+# ===== MODIFICAÇÃO: Função para re-executar árvores (para repeat) =====
+def re_execute_tree(node):
+    """Re-executa um TreeNode (para loops como repeat)"""
+    if node is None:
+        return
+    
+    if isinstance(node, TreeNode):
+        # Verifica o tipo de nó
+        if node.label == 'move_stmt' and hasattr(node, 'direction'):
+            robot.move(node.direction)
+        elif node.label == 'turn_stmt' and hasattr(node, 'direction'):
+            robot.turn(node.direction)
+        elif node.label == 'statement_list':
+            # Re-executa cada statement na lista
+            for child in node.children:
+                re_execute_tree(child)
+        elif node.label == 'statement':
+            # Re-executa o statement
+            for child in node.children:
+                re_execute_tree(child)
+        else:
+            # Re-executa os filhos
+            for child in node.children:
+                re_execute_tree(child)
+
 # ===== MODIFICAÇÃO: Definição de Precedência de Operadores =====
 # A precedência resolva ambiguidades na gramática (exemplo: 2+3*4 = 14 ou 20?)
 # Regras de precedência (do menor para o maior):
@@ -182,6 +207,8 @@ def p_move_stmt(p):
     move_node.add_child(TreeNode('MOVE', 'move'))
     move_node.add_child(direction_node)
     move_node.add_child(TreeNode('SEMICOLON', ';'))
+    # Armazena a direção para re-execução
+    move_node.direction = direction_value if isinstance(direction_tuple, tuple) else p[2]
     p[0] = move_node
 
 # Comando TURN: turn_stmt → TURN direction SEMICOLON
@@ -203,6 +230,8 @@ def p_turn_stmt(p):
     turn_node.add_child(TreeNode('TURN', 'turn'))
     turn_node.add_child(direction_node)
     turn_node.add_child(TreeNode('SEMICOLON', ';'))
+    # Armazena a direção para re-execução
+    turn_node.direction = direction_value if isinstance(direction_tuple, tuple) else p[2]
     p[0] = turn_node
 
 # Comando PICK: pick_stmt → PICK STRING SEMICOLON
@@ -265,10 +294,50 @@ def p_while_stmt(p):
 def p_repeat_stmt(p):
     '''repeat_stmt : REPEAT expression TIMES block'''
     times = int(p[2])
-    for i in range(times):
-        # Executa o bloco 'times' vezes
-        pass
-    p[0] = ('REPEAT', p[2], p[4])
+    block_content = p[4]
+    
+    # ===== MODIFICAÇÃO: Executar bloco múltiplas vezes =====
+    # O bloco já foi parseado uma vez durante o parsing
+    # Agora re-executamos as instruções (times - 1) vezes
+    
+    if isinstance(block_content, tuple) and block_content[0] == 'BLOCK':
+        statements = block_content[1]
+        
+        # Re-executa (times - 1) vezes (a primeira execução já ocorreu)
+        for iteration in range(times - 1):
+            if isinstance(statements, TreeNode):
+                # Re-executa a árvore de statements
+                re_execute_tree(statements)
+            elif isinstance(statements, list):
+                # Re-executa lista de statements
+                for stmt in statements:
+                    if isinstance(stmt, TreeNode):
+                        re_execute_tree(stmt)
+    
+    # ===== MODIFICAÇÃO: Criar TreeNode para repeat =====
+    repeat_node = TreeNode('repeat_stmt')
+    repeat_node.add_child(TreeNode('REPEAT', 'REPEAT'))
+    
+    # Adiciona expression
+    expr_node = TreeNode('expression')
+    expr_node.add_child(TreeNode('NUMBER', str(p[2])))
+    repeat_node.add_child(expr_node)
+    
+    repeat_node.add_child(TreeNode('TIMES', 'TIMES'))
+    
+    # Adiciona block
+    if isinstance(block_content, tuple):
+        block_node = TreeNode('block')
+        block_node.add_child(TreeNode('LBRACE', '{'))
+        if block_content[0] == 'BLOCK':
+            stmt_list = block_content[1]
+            if isinstance(stmt_list, TreeNode):
+                # Clona a estrutura para a árvore
+                block_node.add_child(stmt_list)
+        block_node.add_child(TreeNode('RBRACE', '}'))
+        repeat_node.add_child(block_node)
+    
+    p[0] = repeat_node
 
 # Bloco: block → LBRACE statement_list RBRACE
 # AÇÃO SEMÂNTICA: Agrupa statements em um bloco
