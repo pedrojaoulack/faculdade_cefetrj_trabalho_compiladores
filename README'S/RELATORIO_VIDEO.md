@@ -838,9 +838,11 @@ faculdade_cefetrj_trabalho_compiladores/
 ├── main.py               # Interface (MODIFICADO)
 ├── tree_visualizer.py    # Visualizador (NOVO)
 ├── exemplo.robo          # Exemplo completo
-├── RELATORIO.md          # Este arquivo
-├── DOCUMENTACAO.md       # Documentação técnica
-└── parsetab.py           # Tabelas LALR (gerado automaticamente)
+├── README.md             # Documentação principal
+├── parsetab.py           # Tabelas LALR (gerado automaticamente)
+└── README'S/             # Pasta com documentação técnica
+    ├── RELATORIO_VIDEO.md    # Relatório (este arquivo)
+    └── COMPARATIVO_TRES_VERSOES.md  # Comparação técnica
 ```
 
 ---

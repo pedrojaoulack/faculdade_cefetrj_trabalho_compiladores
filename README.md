@@ -607,7 +607,10 @@ A análise de derivações é útil para:
 
 ### Documentação Detalhada
 
-Para um guia completo sobre como usar derivações, veja: **[USANDO_DERIVACOES.md](USANDO_DERIVACOES.md)**
+Para exemplos de derivações e análise técnica completa:
+- 📘 [RELATORIO_VIDEO.md](README'S/RELATORIO_VIDEO.md) - Relatório acadêmico com análise profunda
+- 📊 [COMPARATIVO_TRES_VERSOES.md](README'S/COMPARATIVO_TRES_VERSOES.md) - Comparação com Calc de PLY
+- 🌳 Ou execute análise interativa: `derivation` no REPL
 
 ---
 
