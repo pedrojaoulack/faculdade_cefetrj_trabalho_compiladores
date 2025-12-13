@@ -268,7 +268,7 @@ class ParseTreeVisualizer:
         print("🌳 EXEMPLO DE DERIVAÇÃO LEFTMOST")
         print("="*70)
         print("\n📝 Sentença de entrada: move up; turn right;")
-        print("\n📊 Derivação Leftmost:")
+        print("\n📊 Derivação Leftmost (7 passos):")
         print("""
   1. program
   2. ⇒ statement_list
@@ -276,9 +276,10 @@ class ParseTreeVisualizer:
   4. ⇒ statement_list move_stmt
   5. ⇒ statement_list MOVE direction SEMICOLON
   6. ⇒ statement_list MOVE UP SEMICOLON
-  7. ⇒ statement turn_stmt MOVE UP SEMICOLON
-  8. ⇒ statement TURN direction SEMICOLON MOVE UP SEMICOLON
-  9. ⇒ statement TURN RIGHT SEMICOLON MOVE UP SEMICOLON
+  7. ⇒ statement_list statement
+  8. ⇒ statement_list turn_stmt
+  9. ⇒ statement_list TURN direction SEMICOLON
+ 10. ⇒ statement_list TURN RIGHT SEMICOLON
         """)
         
         print("🌲 Árvore de Derivação (formato ASCII):")

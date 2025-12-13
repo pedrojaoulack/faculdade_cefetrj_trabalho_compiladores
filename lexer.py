@@ -21,14 +21,14 @@ tokens = (
     'TURN',
     'PICK',
     'DROP',
-    
+
     # Estruturas de controle
     'IF',
     'ELSE',
     'WHILE',
     'REPEAT',
     'TIMES',
-    
+
     # Operadores e comparadores
     'ASSIGN',
     'EQUALS',
@@ -37,18 +37,18 @@ tokens = (
     'GREATER',
     'LESSEQUAL',
     'GREATEREQUAL',
-    
+
     # Direções
     'UP',
     'DOWN',
     'LEFT',
     'RIGHT',
-    
+
     # Tipos e literais
     'NUMBER',
     'IDENTIFIER',
     'STRING',
-    
+
     # Delimitadores
     'LBRACE',
     'RBRACE',
@@ -56,7 +56,7 @@ tokens = (
     'RPAREN',
     'SEMICOLON',
     'COMMA',
-    
+
     # Operadores aritméticos
     'PLUS',
     'MINUS',
@@ -161,7 +161,7 @@ if __name__ == '__main__':
         turn right;
     }
     '''
-    
+
     lexer.input(data)
     for tok in lexer:
         print(tok)

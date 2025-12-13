@@ -2,7 +2,7 @@
 # ===== MODIFICAÇÃO PRINCIPAL: Implementação do Parser com PLY =====
 # Gerador de Analisadores: PLY (Python Lex-Yacc)
 # Referência: https://www.dabeaz.com/ply/
-# 
+#
 # Este arquivo implementa:
 # 1. ANÁLISE SINTÁTICA (Yacc) - Análise da estrutura gramatical
 # 2. AÇÕES SEMÂNTICAS - Interpretação e execução do código RoboLang
@@ -11,9 +11,8 @@
 # ======================================================================
 
 import ply.yacc as yacc
-from lexer import tokens
+from lexer import tokens  # noqa: F401 - Required for PLY yacc
 from tree_visualizer import TreeNode, ParseTreeVisualizer
-import sys
 
 # ===== MODIFICAÇÃO: Definição da Classe de Ambiente do Robô =====
 # Esta classe armazena o estado do robô durante a interpretação
@@ -26,7 +25,7 @@ class RobotEnvironment:
         self.inventory = []
         self.variables = {}
         self.grid_size = 10
-        
+
     def move(self, direction):
         """Move o robô na direção especificada"""
         if direction == 'up':
@@ -38,17 +37,17 @@ class RobotEnvironment:
         elif direction == 'right':
             self.position[0] = min(self.position[0] + 1, self.grid_size)
         print(f"🤖 Robô moveu para {direction}. Posição atual: {self.position}")
-        
+
     def turn(self, direction):
         """Gira o robô para uma direção"""
         self.direction = direction
         print(f"🔄 Robô virou para {direction}")
-        
+
     def pick_item(self, item):
         """Pega um item"""
         self.inventory.append(item)
         print(f"📦 Robô pegou: {item}")
-        
+
     def drop_item(self):
         """Solta um item"""
         if self.inventory:
@@ -57,15 +56,17 @@ class RobotEnvironment:
         else:
             print("⚠️  Inventário vazio!")
 
+
 # Ambiente global
 robot = RobotEnvironment()
+
 
 # ===== MODIFICAÇÃO: Função para re-executar árvores (para repeat) =====
 def re_execute_tree(node):
     """Re-executa um TreeNode (para loops como repeat)"""
     if node is None:
         return
-    
+
     if isinstance(node, TreeNode):
         # Verifica o tipo de nó
         if node.label == 'move_stmt' and hasattr(node, 'direction'):
@@ -122,7 +123,7 @@ def p_program(p):
             if isinstance(stmt, TreeNode):
                 stmt_list.add_child(stmt)
         tree.add_child(stmt_list)
-    
+
     ParseTreeVisualizer.set_parse_tree(tree)
     p[0] = ('PROGRAM', p[1])
     print("\n✅ Programa executado com sucesso!")
@@ -138,7 +139,7 @@ def p_statement_list(p):
                      | statement'''
     # ===== MODIFICAÇÃO: Criar nó de árvore =====
     stmt_list_node = TreeNode('statement_list')
-    
+
     if len(p) == 3:
         # statement_list statement
         if isinstance(p[1], TreeNode) and p[1].label == 'statement_list':
@@ -151,14 +152,14 @@ def p_statement_list(p):
                     stmt_list_node.add_child(stmt)
         elif isinstance(p[1], TreeNode):
             stmt_list_node.add_child(p[1])
-        
+
         # Adiciona novo statement
         if isinstance(p[2], TreeNode):
             stmt_list_node.add_child(p[2])
         elif isinstance(p[2], tuple):
             stmt_node = TreeNode(p[2][0])
             stmt_list_node.add_child(stmt_node)
-        
+
         p[0] = stmt_list_node
     else:
         # Apenas statement
@@ -202,7 +203,7 @@ def p_move_stmt(p):
         robot.move(p[2])
         direction_node = TreeNode('direction')
         direction_node.add_child(TreeNode(p[2].upper(), p[2]))
-    
+
     move_node = TreeNode('move_stmt')
     move_node.add_child(TreeNode('MOVE', 'move'))
     move_node.add_child(direction_node)
@@ -225,7 +226,7 @@ def p_turn_stmt(p):
         robot.turn(p[2])
         direction_node = TreeNode('direction')
         direction_node.add_child(TreeNode(p[2].upper(), p[2]))
-    
+
     turn_node = TreeNode('turn_stmt')
     turn_node.add_child(TreeNode('TURN', 'turn'))
     turn_node.add_child(direction_node)
@@ -295,14 +296,14 @@ def p_repeat_stmt(p):
     '''repeat_stmt : REPEAT expression TIMES block'''
     times = int(p[2])
     block_content = p[4]
-    
+
     # ===== MODIFICAÇÃO: Executar bloco múltiplas vezes =====
     # O bloco já foi parseado uma vez durante o parsing
     # Agora re-executamos as instruções (times - 1) vezes
-    
+
     if isinstance(block_content, tuple) and block_content[0] == 'BLOCK':
         statements = block_content[1]
-        
+
         # Re-executa (times - 1) vezes (a primeira execução já ocorreu)
         for iteration in range(times - 1):
             if isinstance(statements, TreeNode):
@@ -313,18 +314,18 @@ def p_repeat_stmt(p):
                 for stmt in statements:
                     if isinstance(stmt, TreeNode):
                         re_execute_tree(stmt)
-    
+
     # ===== MODIFICAÇÃO: Criar TreeNode para repeat =====
     repeat_node = TreeNode('repeat_stmt')
     repeat_node.add_child(TreeNode('REPEAT', 'REPEAT'))
-    
+
     # Adiciona expression
     expr_node = TreeNode('expression')
     expr_node.add_child(TreeNode('NUMBER', str(p[2])))
     repeat_node.add_child(expr_node)
-    
+
     repeat_node.add_child(TreeNode('TIMES', 'TIMES'))
-    
+
     # Adiciona block
     if isinstance(block_content, tuple):
         block_node = TreeNode('block')
@@ -336,7 +337,7 @@ def p_repeat_stmt(p):
                 block_node.add_child(stmt_list)
         block_node.add_child(TreeNode('RBRACE', '}'))
         repeat_node.add_child(block_node)
-    
+
     p[0] = repeat_node
 
 # Bloco: block → LBRACE statement_list RBRACE
@@ -444,6 +445,6 @@ if __name__ == '__main__':
     }
     drop;
     '''
-    
+
     print("🚀 Iniciando análise do programa RoboLang...\n")
     parse(code)
