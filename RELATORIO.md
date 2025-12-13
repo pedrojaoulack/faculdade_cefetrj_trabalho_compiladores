@@ -26,7 +26,7 @@
 
 ## 1. Objetivo do Projeto
 
-Explorar e aplicar os conceitos de **análise léxica**, **análise sintática** e **análise semântica** desenvolvendo um interpretador completo para uma linguagem de domínio específico (DSL) chamada **RoboLang**, utilizando o gerador de analisadores PLY.
+.Explorar e aplicar os conceitos de **análise léxica**, **análise sintática** e **análise semântica** desenvolvendo um interpretador completo para uma linguagem de domínio específico (DSL) chamada **RoboLang**, utilizando o gerador de analisadores PLY.
 
 O projeto vai **muito além** de uma simples calculadora aritmética, implementando um interpretador funcional com:
 - ✅ Controle de robô virtual em grid 2D
